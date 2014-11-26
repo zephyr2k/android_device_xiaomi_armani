@@ -128,7 +128,10 @@ PRODUCT_PACKAGES += \
 # Media
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/media_codecs.xml:system/etc/media_codecs.xml \
-    $(LOCAL_PATH)/configs/media_profiles.xml:system/etc/media_profiles.xml
+    $(LOCAL_PATH)/configs/media_profiles.xml:system/etc/media_profiles.xml \
+    frameworks/av/media/libstagefright/data/media_codecs_google_audio.xml:system/etc/media_codecs_google_audio.xml \
+    frameworks/av/media/libstagefright/data/media_codecs_google_telephony.xml:system/etc/media_codecs_google_telephony.xml \
+    frameworks/av/media/libstagefright/data/media_codecs_google_video.xml:system/etc/media_codecs_google_video.xml
 
 # OMX
 PRODUCT_PACKAGES += \
@@ -198,19 +201,9 @@ PRODUCT_PACKAGES += \
     init.wifi_symlink.sh \
     ueventd.qcom.rc
 
-# Recovery
-PRODUCT_PROPERTY_OVERRIDES += \
-    ro.cwm.enable_key_repeat=true \
-    ro.cwm.forbid_mount=/persist,/firmware \
-    ro.cwm.forbid_format=/fsg,/firmware,/boot,/persist
-
 # Thermal
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/thermal-engine-8226.conf:system/etc/thermal-engine-8226.conf
-
-# Torch
-PRODUCT_PACKAGES += \
-    Torch
 
 # USB
 PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
@@ -221,9 +214,13 @@ PRODUCT_PACKAGES += \
 
 # Wifi
 PRODUCT_PACKAGES += \
+    dhcpcd.conf \
+    hostapd \
     hostapd.accept \
     hostapd.deny \
     hostapd_default.conf \
+    wpa_supplicant \
+    wpa_supplicant.conf \
     p2p_supplicant_overlay.conf \
     wpa_supplicant_overlay.conf \
     WCNSS_cfg.dat \

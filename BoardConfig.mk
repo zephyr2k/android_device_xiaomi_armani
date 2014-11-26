@@ -30,6 +30,7 @@ TARGET_CPU_ABI := armeabi-v7a
 TARGET_CPU_ABI2 := armeabi
 TARGET_CPU_SMP := true
 TARGET_CPU_VARIANT := krait
+TARGET_USE_QCOM_BIONIC_OPTIMIZATION := true
 
 # Kernel
 TARGET_PREBUILT_KERNEL := device/xiaomi/armani/kernel
@@ -44,21 +45,17 @@ BOARD_CUSTOM_BOOTIMG_MK := device/xiaomi/armani/mkbootimg_pre.mk
 
 # Audio
 BOARD_USES_ALSA_AUDIO := true
-TARGET_QCOM_AUDIO_VARIANT := caf
-AUDIO_FEATURE_DISABLED_ANC_HEADSET := true
-AUDIO_FEATURE_DISABLED_DS1_DOLBY_DDP := true
 
 # Bluetooth
 BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR := device/xiaomi/armani/bluetooth
 BOARD_HAVE_BLUETOOTH := true
 BOARD_HAVE_BLUETOOTH_QCOM := true
+BLUETOOTH_HCI_USE_MCT := true
+QCOM_BT_USE_SMD_TTY := true
 
 # Camera
 USE_DEVICE_SPECIFIC_CAMERA := true
 COMMON_GLOBAL_CFLAGS += -DNEEDS_VECTORIMPL_SYMBOLS
-
-# Classpath
-PRODUCT_BOOT_JARS := $(subst $(space),:,$(PRODUCT_BOOT_JARS))
 
 # Enable suspend during charger mode
 BOARD_CHARGER_ENABLE_SUSPEND := true
@@ -78,13 +75,15 @@ BOARD_FLASH_BLOCK_SIZE             := 131072
 # FM
 BOARD_HAVE_QCOM_FM := true
 
+# Fonts
+EXTENDED_FONT_FOOTPRINT := true
+
 # GPS
 BOARD_VENDOR_QCOM_GPS_LOC_API_HARDWARE := $(TARGET_BOARD_PLATFORM)
 TARGET_NO_RPC := true
 
 # Graphics
 BOARD_EGL_CFG := device/xiaomi/armani/configs/egl.cfg
-TARGET_QCOM_DISPLAY_VARIANT := caf-legacy
 TARGET_USES_C2D_COMPOSITION := true
 TARGET_USES_ION := true
 USE_OPENGL_RENDERER := true
@@ -104,16 +103,11 @@ MAX_EGL_CACHE_SIZE := 2048*1024
 # Lights
 TARGET_PROVIDES_LIBLIGHT := true
 
-# Media
-TARGET_QCOM_MEDIA_VARIANT := caf-legacy
-TARGET_ENABLE_QC_AV_ENHANCEMENTS := true
-
 # Power
 TARGET_POWERHAL_VARIANT := qcom
 
 # QCOM hardware
 BOARD_USES_QCOM_HARDWARE := true
-TARGET_USES_QCOM_BSP := true
 
 # Recovery
 TARGET_RECOVERY_FSTAB := device/xiaomi/armani/rootdir/etc/fstab.qcom
@@ -123,16 +117,6 @@ BOARD_HAS_NO_SELECT_BUTTON := true
 BOARD_SUPPRESS_EMMC_WIPE := true
 BOARD_USE_CUSTOM_RECOVERY_FONT := \"roboto_15x24.h\"
 
-# SELinux
-BOARD_SEPOLICY_DIRS += \
-    device/xiaomi/armani/sepolicy
-
-# The list below is order dependent
-BOARD_SEPOLICY_UNION += \
-    device.te \
-    app.te \
-    file_contexts
-
 # Time services
 BOARD_USES_QC_TIME_SERVICES := true
 
@@ -140,10 +124,6 @@ BOARD_USES_QC_TIME_SERVICES := true
 BOARD_VOLD_DISC_HAS_MULTIPLE_MAJORS := true
 BOARD_VOLD_EMMC_SHARES_DEV_MAJOR := true
 TARGET_USE_CUSTOM_LUN_FILE_PATH := /sys/devices/platform/msm_hsusb/gadget/lun%d/file
-
-# Webkit
-ENABLE_WEBGL := true
-TARGET_FORCE_CPU_UPLOAD := true
 
 # Wifi
 BOARD_HAVE_XIAOMI_WIFI := true
