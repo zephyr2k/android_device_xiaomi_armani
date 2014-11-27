@@ -51,6 +51,9 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/mixer_paths.xml:system/etc/mixer_paths.xml
 
 # Bluetooth
+PRODUCT_PACKAGES += \
+    init.qcom.bt.sh
+
 PRODUCT_PROPERTY_OVERRIDES += \
     bluetooth.hfp.client=1
 
@@ -177,14 +180,9 @@ PRODUCT_PACKAGES += \
 # Qualcomm
 PRODUCT_PROPERTY_OVERRIDES += \
     persist.timed.enable=true \
-    qcom.hw.aac.encoder=true \
-    ro.qualcomm.cabl=0 \
     ro.vendor.extension_library=/vendor/lib/libqc-opt.so
 
 # Ramdisk
-PRODUCT_PACKAGES += \
-    init.qcom.bt.sh
- 
 PRODUCT_PACKAGES += \
     chargeonlymode \
     fstab.qcom \
@@ -198,26 +196,28 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/thermal-engine-8226.conf:system/etc/thermal-engine-8226.conf
 
 # USB
-PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
-    persist.sys.usb.config=mtp
-
 PRODUCT_PACKAGES += \
     com.android.future.usb.accessory
 
+PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
+    persist.sys.usb.config=mtp
+
 # Wifi
 PRODUCT_PACKAGES += \
-    dhcpcd.conf \
-    hostapd \
     hostapd.accept \
     hostapd.deny \
     hostapd_default.conf \
-    wpa_supplicant \
-    wpa_supplicant.conf \
     p2p_supplicant_overlay.conf \
     wpa_supplicant_overlay.conf \
     WCNSS_cfg.dat \
     WCNSS_qcom_cfg.ini \
     WCNSS_qcom_wlan_nv.bin
+
+PRODUCT_PACKAGES += \
+    dhcpcd.conf \
+    hostapd \
+    wpa_supplicant \
+    wpa_supplicant.conf
 
 PRODUCT_PACKAGES += \
     libcurl \
