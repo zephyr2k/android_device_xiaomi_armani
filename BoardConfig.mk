@@ -114,6 +114,9 @@ BOARD_HAS_NO_SELECT_BUTTON := true
 BOARD_SUPPRESS_EMMC_WIPE := true
 BOARD_USE_CUSTOM_RECOVERY_FONT := \"roboto_15x24.h\"
 
+# SELinux policies
+include device/qcom/sepolicy/sepolicy.mk
+
 # Time services
 BOARD_USES_QC_TIME_SERVICES := true
 
