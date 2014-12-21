@@ -67,6 +67,10 @@ PRODUCT_PROPERTY_OVERRIDES += \
 PRODUCT_PACKAGES += \
     libxml2
 
+# Charger
+PRODUCT_PACKAGES += \
+    charger_res_images
+
 # CRDA
 PRODUCT_PACKAGES += \
     crda \
@@ -192,7 +196,6 @@ PRODUCT_PROPERTY_OVERRIDES += \
 
 # Ramdisk
 PRODUCT_PACKAGES += \
-    chargeonlymode \
     fstab.qcom \
     init.qcom.rc \
     init.qcom.usb.rc \
