@@ -65,6 +65,7 @@ on init
 
 on fs
     mount_all ./fstab.qcom
+    restorecon_recursive /persist
     setprop ro.crypto.fuse_sdcard true
     write /sys/kernel/boot_adsp/boot 1
 
@@ -139,6 +140,7 @@ on post-fs-data
     mkdir /data/system/sensors
     chmod 775 /data/system/sensors
     write /data/system/sensors/settings 1
+    restorecon /data/system/sensors/settings
     chmod 664 /data/system/sensors/settings
 
     # AKM setting data
