@@ -130,6 +130,7 @@ TARGET_USERIMAGES_USE_EXT4 := true
 BOARD_HAS_NO_SELECT_BUTTON := true
 BOARD_SUPPRESS_EMMC_WIPE := true
 BOARD_USE_CUSTOM_RECOVERY_FONT := \"roboto_15x24.h\"
+COMMON_GLOBAL_CFLAGS += -DNO_SECURE_DISCARD
 
 # SELinux policies
 include device/qcom/sepolicy/sepolicy.mk
