@@ -132,8 +132,9 @@ BOARD_SUPPRESS_EMMC_WIPE := true
 BOARD_USE_CUSTOM_RECOVERY_FONT := \"roboto_15x24.h\"
 COMMON_GLOBAL_CFLAGS += -DNO_SECURE_DISCARD
 
-# SELinux policies
+# SELinux
 include device/qcom/sepolicy/sepolicy.mk
+BOARD_SEPOLICY_DIRS += device/xiaomi/armani/sepolicy
 
 # Time services
 BOARD_USES_QC_TIME_SERVICES := true
