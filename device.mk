@@ -61,6 +61,7 @@ PRODUCT_PACKAGES += \
 
 # Camera
 PRODUCT_PACKAGES += \
+    camera.msm8226 \
     libxml2
 
 # CRDA
