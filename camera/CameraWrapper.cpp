@@ -33,9 +33,10 @@
 #include <camera/Camera.h>
 #include <camera/CameraParameters.h>
 
-// Morpho HDR parameter names
+// Armani parameter names
 static char KEY_QC_MORPHO_HDR[] = "morpho-hdr";
 static char KEY_QC_MORPHO_HDR_VALUES[] = "morpho-hdr-values";
+static char KEY_QC_HDR_NEED_1X[] = "hdr-need-1x";
 
 static android::Mutex gCameraWrapperLock;
 static camera_module_t *gVendorModule = 0;
@@ -100,6 +101,8 @@ static int check_vendor_module()
 
 static char *camera_fixup_getparams(int id, const char *settings)
 {
+    const char *supportedSceneModes = "auto,asd,landscape,snow,beach,sunset,night,portrait,backlight,sports,steadyphoto,flowers,candlelight,fireworks,party,night-portrait,theatre,action,AR";
+
     android::CameraParameters params;
     params.unflatten(android::String8(settings));
 
@@ -107,6 +110,12 @@ static char *camera_fixup_getparams(int id, const char *settings)
     ALOGV("%s: original parameters:", __FUNCTION__);
     params.dump();
 #endif
+
+    /* Front camera: disable HDR scene mode */
+    if (id == 1) {
+        params.set(android::CameraParameters::KEY_SUPPORTED_SCENE_MODES,
+                supportedSceneModes);
+    }
 
 #if !LOG_NDEBUG
     ALOGV("%s: fixed parameters:", __FUNCTION__);
@@ -133,8 +142,10 @@ static char *camera_fixup_setparams(int id, const char *settings)
         const char *sceneMode = params.get(android::CameraParameters::KEY_SCENE_MODE);
         if (strcmp(sceneMode, "hdr") == 0) {
             params.set(KEY_QC_MORPHO_HDR, "true");
+            params.set(KEY_QC_HDR_NEED_1X, "true");
         } else {
             params.set(KEY_QC_MORPHO_HDR, "false");
+            params.set(KEY_QC_HDR_NEED_1X, "false");
         }
     }
 
