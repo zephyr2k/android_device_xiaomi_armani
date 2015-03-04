@@ -12,6 +12,7 @@
 # Permissions for CSVT
 /dev/smd11                0660   radio      radio
 
+/dev/smd0                 0660   system     system
 /dev/radio0               0640   system     system
 /dev/rmnet_mux_ctrl       0640   radio      radio
 /dev/smdcntl0             0640   radio      radio

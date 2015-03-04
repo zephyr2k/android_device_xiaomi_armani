@@ -94,6 +94,16 @@ on boot
 
     # Prevents permission denied error for telephony
     chmod 0644 /proc/cmdline
+    
+    # Allow QMUX daemon to assign port open wait time
+    chown radio radio /sys/devices/virtual/hsicctl/hsicctl0/modem_wait
+
+    #For bridgemgr daemon to inform the USB driver of the correct transport
+    chown radio radio /sys/class/android_usb/f_rmnet_smd_sdio/transport
+
+    # port-bridge
+    chmod 0660 /dev/smd0
+    chown system system /dev/smd0
 
     # For setting tcp delayed ack
     chown system system /sys/kernel/ipv4/tcp_delack_seg
