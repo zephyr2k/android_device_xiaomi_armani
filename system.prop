@@ -7,11 +7,10 @@ persist.audio.fluence.voicerec=false
 persist.audio.fluence.speaker=true
 af.resampler.quality=4
 audio.offload.buffer.size.kb=32
-audio.offload.gapless.enabled=false
+audio.offload.gapless.enabled=true
 audio.offload.pcm.enable=false
 audio.offload.disable=1
-av.offload.enable=false
-av.streaming.offload.enable=false
+av.offload.enable=true
 use.voice.path.for.pcm.voip=true
 
 # Display
