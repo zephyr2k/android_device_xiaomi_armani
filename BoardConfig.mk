@@ -122,6 +122,10 @@ COMMON_GLOBAL_CFLAGS += -DNO_SECURE_DISCARD
 include device/qcom/sepolicy/sepolicy.mk
 BOARD_SEPOLICY_DIRS += device/xiaomi/armani/sepolicy
 
+# RIL
+BOARD_PROVIDES_LIBRIL := true
+BOARD_RIL_CLASS := ../../../device/xiaomi/armani/ril/
+
 # Time services
 BOARD_USES_QC_TIME_SERVICES := true
 
