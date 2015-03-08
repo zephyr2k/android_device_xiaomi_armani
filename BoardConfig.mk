@@ -124,6 +124,7 @@ BOARD_SEPOLICY_DIRS += device/xiaomi/armani/sepolicy
 
 # RIL
 BOARD_PROVIDES_LIBRIL := true
+BOARD_RIL_CLASS := ../../../device/xiaomi/armani/ril/
 
 # Time services
 BOARD_USES_QC_TIME_SERVICES := true

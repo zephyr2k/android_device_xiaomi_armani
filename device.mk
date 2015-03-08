@@ -245,6 +245,9 @@ PRODUCT_PROPERTY_OVERRIDES += \
     persist.sys.wfd.virtual=0
 
 #RIL
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.telephony.ril_class=ArmaniRIL
+
 #PRODUCT_PACKAGES += \
 #    libril \
 #    rild \

@@ -19,8 +19,8 @@
 
 #include <hardware_legacy/power.h>
 
-#include "telephony/ril.h"
-#include "telephony/ril_cdma_sms.h"
+#include <telephony/ril.h>
+#include <telephony/ril_cdma_sms.h>
 #include <cutils/sockets.h>
 #include <cutils/jstring.h>
 #include <telephony/record_stream.h>
@@ -277,11 +277,11 @@ static void dispatchNVWriteItem(Parcel &p, RequestInfo *pRI);
 static void dispatchUiccSubscripton(Parcel &p, RequestInfo *pRI);
 static void dispatchSimAuthentication(Parcel &p, RequestInfo *pRI);
 static void dispatchDataProfile(Parcel &p, RequestInfo *pRI);
+static void dispatchNetworkManual (Parcel& p, RequestInfo *pRI);
 static int responseInts(Parcel &p, void *response, size_t responselen);
 static int responseStrings(Parcel &p, void *response, size_t responselen);
-static int responseStringsNetworks(Parcel &p, void *response, size_t responselen);
-static int responseStrings(Parcel &p, void *response, size_t responselen, bool network_search);
 static int responseString(Parcel &p, void *response, size_t responselen);
+static int responseStringsDataRegistrationState(Parcel &p, void *response, size_t responselen);
 static int responseVoid(Parcel &p, void *response, size_t responselen);
 static int responseCallList(Parcel &p, void *response, size_t responselen);
 static int responseSMS(Parcel &p, void *response, size_t responselen);
@@ -294,7 +294,6 @@ static int responseSsn(Parcel &p, void *response, size_t responselen);
 static int responseSimStatus(Parcel &p, void *response, size_t responselen);
 static int responseGsmBrSmsCnf(Parcel &p, void *response, size_t responselen);
 static int responseCdmaBrSmsCnf(Parcel &p, void *response, size_t responselen);
-static int responseCdmaERIInfo(Parcel &p, void *response, size_t responselen);
 static int responseCdmaSms(Parcel &p, void *response, size_t responselen);
 static int responseCellList(Parcel &p, void *response, size_t responselen);
 static int responseCdmaInformationRecords(Parcel &p,void *response, size_t responselen);
@@ -614,6 +613,45 @@ dispatchStrings (Parcel &p, RequestInfo *pRI) {
 
     if (pStrings != NULL) {
         for (int i = 0 ; i < countStrings ; i++) {
+#ifdef MEMSET_FREED
+            memsetString (pStrings[i]);
+#endif
+            free(pStrings[i]);
+        }
+
+#ifdef MEMSET_FREED
+        memset(pStrings, 0, datalen);
+#endif
+    }
+
+    return;
+invalid:
+    invalidCommandBlock(pRI);
+    return;
+}
+
+/** Callee expects const char * */
+static void
+dispatchNetworkManual (Parcel& p, RequestInfo *pRI) {
+    status_t status;
+    size_t datalen;
+    char **pStrings;
+
+    datalen = sizeof(char *) * 2;
+
+    startRequest;
+    pStrings = (char **)alloca(datalen);
+
+    pStrings[0] = strdupReadString(p);
+    appendPrintBuf("%s%s,", printBuf, pStrings[0]);
+    pStrings[1] = strdup("NOCHANGE");
+    closeRequest;
+    printRequest(pRI->token, pRI->pCI->requestNumber);
+
+    s_callbacks.onRequest(pRI->pCI->requestNumber, pStrings, datalen, pRI);
+
+    if (pStrings != NULL) {
+        for (int i = 0 ; i < 2 ; i++) {
 #ifdef MEMSET_FREED
             memsetString (pStrings[i]);
 #endif
@@ -1682,8 +1720,8 @@ static void dispatchSetInitialAttachApn(Parcel &p, RequestInfo *pRI)
     pf.password = strdupReadString(p);
 
     startRequest;
-    appendPrintBuf("%sapn=%s, protocol=%s, auth_type=%d, username=%s, password=%s",
-            printBuf, pf.apn, pf.protocol, pf.auth_type, pf.username, pf.password);
+    appendPrintBuf("%sapn=%s, protocol=%s, authtype=%d, username=%s, password=%s",
+            printBuf, pf.apn, pf.protocol, pf.authtype, pf.username, pf.password);
     closeRequest;
     printRequest(pRI->token, pRI->pCI->requestNumber);
 
@@ -2090,15 +2128,6 @@ static int responseStringsWithVersion(int version, Parcel &p, void *response, si
 
 /** response is a char **, pointing to an array of char *'s */
 static int responseStrings(Parcel &p, void *response, size_t responselen) {
-    return responseStrings(p, response, responselen, false);
-}
-
-static int responseStringsNetworks(Parcel &p, void *response, size_t responselen) {
-    return responseStrings(p, response, responselen, true);
-}
-
-/** response is a char **, pointing to an array of char *'s */
-static int responseStrings(Parcel &p, void *response, size_t responselen, bool network_search) {
     int numStrings;
 
     if (response == NULL && responselen != 0) {
@@ -2117,29 +2146,11 @@ static int responseStrings(Parcel &p, void *response, size_t responselen, bool n
         char **p_cur = (char **) response;
 
         numStrings = responselen / sizeof(char *);
-#ifdef RIL_FIVE_SEARCH_RESPONSES
-        if (network_search == true) {
-            // we only want four entries for each network
-            p.writeInt32 (numStrings - (numStrings / 5));
-        } else {
-            p.writeInt32 (numStrings);
-        }
-        int sCount = 0;
-#else
         p.writeInt32 (numStrings);
-#endif
 
         /* each string*/
         startResponse;
         for (int i = 0 ; i < numStrings ; i++) {
-#ifdef RIL_FIVE_SEARCH_RESPONSES
-            sCount++;
-            // ignore the fifth string that is returned by newer HTC libhtc_ril.so.
-            if (network_search == true && sCount % 5 == 0) {
-                sCount = 0;
-                continue;
-            }
-#endif
             appendPrintBuf("%s%s,", printBuf, (char*)p_cur[i]);
             writeStringToParcel (p, p_cur[i]);
         }
@@ -2149,6 +2160,37 @@ static int responseStrings(Parcel &p, void *response, size_t responselen, bool n
     return 0;
 }
 
+/*
+ * RIL_RADIO_TECHNOLOGY: 19 (QCOM HSPAP_DC) ==> 30 (CM DCHSPAP)
+ */
+static int responseStringsDataRegistrationState(Parcel &p, void *response, size_t responselen) {
+
+    if (response == NULL && responselen != 0) {
+        ALOGE("invalid response: NULL");
+        return RIL_ERRNO_INVALID_RESPONSE;
+    }
+    if (responselen % sizeof(char *) != 0) {
+        ALOGE("invalid response length %d expected multiple of %d\n",
+            (int)responselen, (int)sizeof(char *));
+        return RIL_ERRNO_INVALID_RESPONSE;
+    }
+
+    char **p_cur = (char **) response;
+
+    if (p_cur[3] != NULL) {
+#ifdef RIL_LEGACY_PAP
+        if (strncmp(p_cur[3], "18", 2) == 0) {
+            ALOGE("DATA_REGISTRATION_STATE: stock radioTechnology=18 (QCOM HSPAP_DC) -> CyanogenMod radioTechnology=30 (CM DCHSPAP)");
+#else
+        if (strncmp(p_cur[3], "19", 2) == 0) {
+            ALOGE("DATA_REGISTRATION_STATE: stock radioTechnology=19 (QCOM HSPAP_DC) -> CyanogenMod radioTechnology=30 (CM DCHSPAP)");
+#endif
+            strncpy(p_cur[3], "15", 2);
+        }
+    }
+
+    return responseStrings(p, response, responselen);
+}
 
 /**
  * NULL strings are accepted
@@ -2390,9 +2432,7 @@ static int responseDataCallList(Parcel &p, void *response, size_t responselen)
         int i;
         for (i = 0; i < num; i++) {
             p.writeInt32((int)p_cur[i].status);
-#ifndef HCRADIO
             p.writeInt32(p_cur[i].suggestedRetryTime);
-#endif
             p.writeInt32(p_cur[i].cid);
             p.writeInt32(p_cur[i].active);
             writeStringToParcel(p, p_cur[i].type);
@@ -2587,32 +2627,6 @@ static void marshallSignalInfoRecord(Parcel &p,
     p.writeInt32(p_signalInfoRecord.signal);
 }
 
-static int responseCdmaERIInfo(Parcel &p,
-            void *response, size_t responselen) {
-    /*
-     * Method from RIL.java
-     * private Object responseCdmaERIInfo(Parcel p)  {
-     * CdmaERIInfo mCdmaERIInfo = new CdmaERIInfo();
-     *
-     * mCdmaERIInfo.carrier_id = p.readInt();
-     * mCdmaERIInfo.eri_id = p.readInt();
-     * mCdmaERIInfo.icon_img_id = p.readInt();
-     * mCdmaERIInfo.param1 = p.readInt();
-     * mCdmaERIInfo.param2 = p.readInt();
-     * mCdmaERIInfo.param3 = p.readInt();
-     * mCdmaERIInfo.param4 = p.readInt();
-     * mCdmaERIInfo.text = p.readString();
-     * mCdmaERIInfo.data_support = p.readInt();
-     *
-     * if (p.dataAvail() > 0)
-     *      localCdmaERIInfo.roaming_type = p.readInt();
-     *
-     * return localCdmaERIInfo;
-     * }
-     */
-     return 0;
-}
-
 static int responseCdmaInformationRecords(Parcel &p,
             void *response, size_t responselen) {
     int num;
@@ -2777,48 +2791,7 @@ static int responseRilSignalStrength(Parcel &p,
         return RIL_ERRNO_INVALID_RESPONSE;
     }
 
-    if (responselen >= sizeof (RIL_SignalStrength_HTC)) {
-        RIL_SignalStrength_HTC *p_cur = ((RIL_SignalStrength_HTC *) response);
-
-        p.writeInt32(p_cur->GW_SignalStrength.signalStrength);
-        p.writeInt32(p_cur->GW_SignalStrength.bitErrorRate);
-        p.writeInt32(p_cur->CDMA_SignalStrength.dbm);
-        p.writeInt32(p_cur->CDMA_SignalStrength.ecio);
-        p.writeInt32(p_cur->EVDO_SignalStrength.dbm);
-        p.writeInt32(p_cur->EVDO_SignalStrength.ecio);
-        p.writeInt32(p_cur->EVDO_SignalStrength.signalNoiseRatio);
-        p.writeInt32(p_cur->LTE_SignalStrength.signalStrength);
-        p.writeInt32(p_cur->LTE_SignalStrength.rsrp);
-        p.writeInt32(p_cur->LTE_SignalStrength.rsrq);
-        p.writeInt32(p_cur->LTE_SignalStrength.rssnr);
-        p.writeInt32(p_cur->LTE_SignalStrength.cqi);
-
-        startResponse;
-        appendPrintBuf("%s[signalStrength=%d,bitErrorRate=%d,\
-                CDMA_SS.dbm=%d,CDMA_SSecio=%d,\
-                EVDO_SS.dbm=%d,EVDO_SS.ecio=%d,\
-                EVDO_SS.signalNoiseRatio=%d,\
-                ATT_SS.dbm=%d,ATT_SS.ecno=%d,\
-                LTE_SS.signalStrength=%d,LTE_SS.rsrp=%d,LTE_SS.rsrq=%d,\
-                LTE_SS.rssnr=%d,LTE_SS.cqi=%d]",
-                printBuf,
-                p_cur->GW_SignalStrength.signalStrength,
-                p_cur->GW_SignalStrength.bitErrorRate,
-                p_cur->CDMA_SignalStrength.dbm,
-                p_cur->CDMA_SignalStrength.ecio,
-                p_cur->EVDO_SignalStrength.dbm,
-                p_cur->EVDO_SignalStrength.ecio,
-                p_cur->EVDO_SignalStrength.signalNoiseRatio,
-                p_cur->ATT_SignalStrength.dbm,
-                p_cur->ATT_SignalStrength.ecno,
-                p_cur->LTE_SignalStrength.signalStrength,
-                p_cur->LTE_SignalStrength.rsrp,
-                p_cur->LTE_SignalStrength.rsrq,
-                p_cur->LTE_SignalStrength.rssnr,
-                p_cur->LTE_SignalStrength.cqi);
-        closeResponse;
-
-    } else if (responselen >= sizeof (RIL_SignalStrength_v5)) {
+    if (responselen >= sizeof (RIL_SignalStrength_v5)) {
         RIL_SignalStrength_v10 *p_cur = ((RIL_SignalStrength_v10 *) response);
 
         p.writeInt32(p_cur->GW_SignalStrength.signalStrength);
@@ -3128,22 +3101,16 @@ static int responseCellInfoList(Parcel &p, void *response, size_t responselen)
                 p.writeInt32(p_cur->CellInfo.lte.cellIdentityLte.pci);
                 p.writeInt32(p_cur->CellInfo.lte.cellIdentityLte.tac);
 
-                // RSRP and RSRQ are being reported as dBm*10, not dBm
-                int rsrp = (p_cur->CellInfo.lte.signalStrengthLte.rsrp != INT_MAX ?
-                            p_cur->CellInfo.lte.signalStrengthLte.rsrp/10 : INT_MAX);
-                int rsrq = (p_cur->CellInfo.lte.signalStrengthLte.rsrq != INT_MAX ?
-                            p_cur->CellInfo.lte.signalStrengthLte.rsrq/10 : INT_MAX);
-
                 appendPrintBuf("%s lteSS: ss=%d,rsrp=%d,rsrq=%d,rssnr=%d,cqi=%d,ta=%d", printBuf,
                     p_cur->CellInfo.lte.signalStrengthLte.signalStrength,
-                    rsrp,
-                    rsrq,
+                    p_cur->CellInfo.lte.signalStrengthLte.rsrp,
+                    p_cur->CellInfo.lte.signalStrengthLte.rsrq,
                     p_cur->CellInfo.lte.signalStrengthLte.rssnr,
                     p_cur->CellInfo.lte.signalStrengthLte.cqi,
                     p_cur->CellInfo.lte.signalStrengthLte.timingAdvance);
                 p.writeInt32(p_cur->CellInfo.lte.signalStrengthLte.signalStrength);
-                p.writeInt32(rsrp);
-                p.writeInt32(rsrq);
+                p.writeInt32(p_cur->CellInfo.lte.signalStrengthLte.rsrp);
+                p.writeInt32(p_cur->CellInfo.lte.signalStrengthLte.rsrq);
                 p.writeInt32(p_cur->CellInfo.lte.signalStrengthLte.rssnr);
                 p.writeInt32(p_cur->CellInfo.lte.signalStrengthLte.cqi);
                 p.writeInt32(p_cur->CellInfo.lte.signalStrengthLte.timingAdvance);
@@ -4443,36 +4410,8 @@ void RIL_onUnsolicitedResponse(int unsolResponse, void *data,
 
     if ((unsolResponseIndex < 0)
         || (unsolResponseIndex >= (int32_t)NUM_ELEMS(s_unsolResponses))) {
-        /*
-         * catching HTC custom responses and mapping them directly to the ril_unsol_commands array
-         * before giving up on an unsupported response
-         *
-         * don't forget to update indices when changing something!
-         */
-        int htc_base = 42;
-#ifdef RIL_NO_CELL_INFO_LIST
-        /* offset by one, because RIL_UNSOL_CELL_INFO_LIST isn't in the list */
-        htc_base--;
-#endif
-        switch (unsolResponse) {
-          case RIL_UNSOL_ENTER_LPM: unsolResponseIndex = htc_base + 0; break;
-          case RIL_UNSOL_CDMA_3G_INDICATOR: unsolResponseIndex = htc_base + 1; break;
-          case RIL_UNSOL_CDMA_ENHANCE_ROAMING_INDICATOR: unsolResponseIndex = htc_base + 2; break;
-          case RIL_UNSOL_CDMA_NETWORK_BASE_PLUSCODE_DIAL: unsolResponseIndex = htc_base + 3; break;
-          case RIL_UNSOL_RESPONSE_PHONE_MODE_CHANGE: unsolResponseIndex = htc_base + 4; break;
-          case RIL_UNSOL_RESPONSE_VOICE_RADIO_TECH_CHANGED: unsolResponseIndex = htc_base + 5; break;
-          case RIL_UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED_HTC: unsolResponseIndex = htc_base + 6; break;
-          case RIL_UNSOL_RESPONSE_DATA_NETWORK_STATE_CHANGED_M7:
-          case RIL_UNSOL_RESPONSE_DATA_NETWORK_STATE_CHANGED: unsolResponseIndex = htc_base + 7; break;
-          case RIL_UNSOL_RESPONSE_PHONE_MODE_CHANGE_M7:
-            // remap 4802 to 2
-            RLOGD("m7 supported unsolicited response code %d", unsolResponse);
-            unsolResponse = RIL_UNSOL_RESPONSE_VOICE_NETWORK_STATE_CHANGED;
-            unsolResponseIndex = 2;
-            break;
-          default: RLOGE("unsupported unsolicited response code %d", unsolResponse); return;
-        }
-
+        RLOGE("unsupported unsolicited response code %d", unsolResponse);
+        return;
     }
 
     // Grab a wake lock if needed for this reponse,
@@ -4786,10 +4725,8 @@ requestToString(int request) {
         case RIL_REQUEST_ACKNOWLEDGE_INCOMING_GSM_SMS_WITH_PDU: return "RIL_REQUEST_ACKNOWLEDGE_INCOMING_GSM_SMS_WITH_PDU";
         case RIL_REQUEST_STK_SEND_ENVELOPE_WITH_STATUS: return "RIL_REQUEST_STK_SEND_ENVELOPE_WITH_STATUS";
         case RIL_REQUEST_VOICE_RADIO_TECH: return "VOICE_RADIO_TECH";
-#ifndef RIL_NO_CELL_INFO_LIST
         case RIL_REQUEST_GET_CELL_INFO_LIST: return"GET_CELL_INFO_LIST";
         case RIL_REQUEST_SET_UNSOL_CELL_INFO_LIST_RATE: return"SET_UNSOL_CELL_INFO_LIST_RATE";
-#endif
         case RIL_REQUEST_SET_INITIAL_ATTACH_APN: return "RIL_REQUEST_SET_INITIAL_ATTACH_APN";
         case RIL_REQUEST_IMS_REGISTRATION_STATE: return "IMS_REGISTRATION_STATE";
         case RIL_REQUEST_IMS_SEND_SMS: return "IMS_SEND_SMS";
@@ -4839,25 +4776,13 @@ requestToString(int request) {
         case RIL_UNSOL_EXIT_EMERGENCY_CALLBACK_MODE: return "UNSOL_EXIT_EMERGENCY_CALLBACK_MODE";
         case RIL_UNSOL_RIL_CONNECTED: return "UNSOL_RIL_CONNECTED";
         case RIL_UNSOL_VOICE_RADIO_TECH_CHANGED: return "UNSOL_VOICE_RADIO_TECH_CHANGED";
-#ifndef RIL_NO_CELL_INFO_LIST
         case RIL_UNSOL_CELL_INFO_LIST: return "UNSOL_CELL_INFO_LIST";
-#endif
         case RIL_UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED: return "RESPONSE_IMS_NETWORK_STATE_CHANGED";
         case RIL_UNSOL_UICC_SUBSCRIPTION_STATUS_CHANGED: return "UNSOL_UICC_SUBSCRIPTION_STATUS_CHANGED";
         case RIL_UNSOL_SRVCC_STATE_NOTIFY: return "UNSOL_SRVCC_STATE_NOTIFY";
         case RIL_UNSOL_HARDWARE_CONFIG_CHANGED: return "HARDWARE_CONFIG_CHANGED";
         case RIL_UNSOL_DC_RT_INFO_CHANGED: return "UNSOL_DC_RT_INFO_CHANGED";
         case RIL_REQUEST_SHUTDOWN: return "SHUTDOWN";
-        case RIL_UNSOL_ENTER_LPM: return "UNSOL_ENTER_LPM";
-        case RIL_UNSOL_CDMA_3G_INDICATOR: return "UNSOL_CDMA_3G_INDICATOR";
-        case RIL_UNSOL_CDMA_ENHANCE_ROAMING_INDICATOR: return "UNSOL_CDMA_ENHANCE_ROAMING_INDICATOR";
-        case RIL_UNSOL_CDMA_NETWORK_BASE_PLUSCODE_DIAL: return "UNSOL_CDMA_NETWORK_BASE_PLUSCODE_DIAL";
-        case RIL_UNSOL_RESPONSE_PHONE_MODE_CHANGE: return "UNSOL_RESPONSE_PHONE_MODE_CHANGE";
-        case RIL_UNSOL_RESPONSE_VOICE_RADIO_TECH_CHANGED: return "UNSOL_RESPONSE_VOICE_RADIO_TECH_CHANGED";
-        case RIL_UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED_HTC: return "UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED";
-        case RIL_UNSOL_RESPONSE_DATA_NETWORK_STATE_CHANGED_M7:
-        case RIL_UNSOL_RESPONSE_DATA_NETWORK_STATE_CHANGED: return "UNSOL_RESPONSE_DATA_NETWORK_STATE_CHANGED";
-        case RIL_UNSOL_RESPONSE_PHONE_MODE_CHANGE_M7: return "UNSOL_RESPONSE_VOICE_NETWORK_STATE_CHANGED";
         default: return "<unknown request>";
     }
 }
