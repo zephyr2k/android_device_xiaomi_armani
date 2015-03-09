@@ -218,7 +218,8 @@ PRODUCT_PACKAGES += \
     wpa_supplicant_overlay.conf \
     WCNSS_cfg.dat \
     WCNSS_qcom_cfg.ini \
-    WCNSS_qcom_wlan_nv.bin
+    WCNSS_qcom_wlan_nv.bin \
+    wlan.ko
 
 PRODUCT_PACKAGES += \
     dhcpcd.conf \
@@ -237,7 +238,7 @@ PRODUCT_PROPERTY_OVERRIDES += \
     wifi.interface=wlan0
 
 PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/wifi/pronto_wlan.ko:system/lib/modules/pronto/pronto_wlan.ko 
+    $(LOCAL_PATH)/wifi/wlan.ko:system/lib/modules/wlan.ko 
 
 # WFD
 PRODUCT_PROPERTY_OVERRIDES += \

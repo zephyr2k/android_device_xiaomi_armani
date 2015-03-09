@@ -42,6 +42,9 @@ BOARD_KERNEL_SEPARATED_DT := true
 BOARD_CUSTOM_BOOTIMG_MK := device/xiaomi/armani/mkbootimg.mk
 BOARD_MKBOOTIMG_ARGS := --kernel_offset 0x00008000 --ramdisk_offset 0x02000000 --tags_offset 0x01e00000
 
+#Header
+TARGET_SPECIFIC_HEADER_PATH += device/xiaomi/armani/include
+
 # ANT+
 BOARD_ANT_WIRELESS_DEVICE := "qualcomm-smd"
 
@@ -125,6 +128,7 @@ BOARD_SEPOLICY_DIRS += device/xiaomi/armani/sepolicy
 # RIL
 BOARD_PROVIDES_LIBRIL := true
 BOARD_RIL_CLASS := ../../../device/xiaomi/armani/ril/
+BOARD_HAS_RIL_LEGACY_PAP := true
 
 # Time services
 BOARD_USES_QC_TIME_SERVICES := true
@@ -143,6 +147,8 @@ BOARD_WPA_SUPPLICANT_DRIVER := NL80211
 BOARD_WPA_SUPPLICANT_PRIVATE_LIB := lib_driver_cmd_qcwcn
 WIFI_DRIVER_MODULE_PATH := "/system/lib/modules/wlan.ko"
 WIFI_DRIVER_MODULE_NAME := "wlan"
+WIFI_DRIVER_FW_PATH_STA := "sta"
+WIFI_DRIVER_FW_PATH_AP  := "ap"
 WPA_SUPPLICANT_VERSION := VER_0_8_X
 TARGET_USES_WCNSS_CTRL := true
 TARGET_USES_QCOM_WCNSS_QMI := true
