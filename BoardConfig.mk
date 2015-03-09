@@ -28,6 +28,7 @@ TARGET_ARCH := arm
 TARGET_ARCH_VARIANT := armv7-a-neon
 TARGET_CPU_ABI := armeabi-v7a
 TARGET_CPU_ABI2 := armeabi
+TARGET_CPU_MEMCPY_BASE_OPT_DISABLE := true
 TARGET_CPU_SMP := true
 TARGET_CPU_VARIANT := krait
 TARGET_USE_QCOM_BIONIC_OPTIMIZATION := true
@@ -75,10 +76,6 @@ BOARD_FLASH_BLOCK_SIZE             := 131072
 # Fonts
 EXTENDED_FONT_FOOTPRINT := true
 
-# GPS
-BOARD_VENDOR_QCOM_GPS_LOC_API_HARDWARE := $(TARGET_BOARD_PLATFORM)
-TARGET_NO_RPC := true
-
 # Graphics
 BOARD_EGL_CFG := device/xiaomi/armani/configs/egl.cfg
 TARGET_USES_C2D_COMPOSITION := true
@@ -100,6 +97,11 @@ MAX_EGL_CACHE_SIZE := 2048*1024
 
 # Hardware tunables
 BOARD_HARDWARE_CLASS := device/xiaomi/armani/cmhw/
+
+# Init
+TARGET_UNIFIED_DEVICE := true
+TARGET_INIT_VENDOR_LIB := libinit_msm
+TARGET_LIBINIT_DEFINES_FILE := device/xiaomi/armani/init/init_armani.c
 
 # Lights
 TARGET_PROVIDES_LIBLIGHT := true
