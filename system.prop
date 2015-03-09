@@ -51,6 +51,23 @@ persist.radio.dont_use_dsd=true
 persist.radio.msgtunnel.start=false
 persist.radio.multisim.config=dsds
 ro.telephony.call_ring.multiple=false
+ro.baseband.arch=msm
+ro.data.large_tcp_window_size=true
+ro.use_data_netmgrd=true
+persist.data.netmgrd.qos.enable=true
+persist.rild.nitz_plmn=
+persist.rild.nitz_long_ons_0=
+persist.rild.nitz_long_ons_1=
+persist.rild.nitz_long_ons_2=
+persist.rild.nitz_long_ons_3=
+persist.rild.nitz_short_ons_0=
+persist.rild.nitz_short_ons_1=
+persist.rild.nitz_short_ons_2=
+persist.rild.nitz_short_ons_3=
+DEVICE_PROVISIONED=1
+
+# Wifi
+wifi.interface=wlan0
 
 #ADB 
 ro.secure=0
