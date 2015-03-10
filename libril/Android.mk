@@ -2,7 +2,6 @@
 
 ifeq ($(BOARD_PROVIDES_LIBRIL),true)
 ifeq ($(TARGET_BOARD_PLATFORM),msm8226)
-ifeq ($(BOARD_VENDOR),htc)
 
 LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
@@ -25,6 +24,10 @@ ifeq ($(SIM_COUNT), 2)
     LOCAL_CFLAGS += -DANDROID_SIM_COUNT_2
 endif
 
+ifeq ($(BOARD_HAS_RIL_LEGACY_PAP),true)
+LOCAL_CFLAGS += -DRIL_LEGACY_PAP
+endif
+
 ifeq ($(BOARD_RIL_NO_CELLINFOLIST),true)
 LOCAL_CFLAGS += -DRIL_NO_CELL_INFO_LIST
 endif
@@ -37,6 +40,5 @@ LOCAL_MODULE:= libril
 
 include $(BUILD_SHARED_LIBRARY)
 
-endif # BOARD_VENDOR
 endif # TARGET_BOARD_PLATFORM
 endif # BOARD_PROVIDES_LIBRIL

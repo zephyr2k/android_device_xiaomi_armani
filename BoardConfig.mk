@@ -103,6 +103,10 @@ TARGET_UNIFIED_DEVICE := true
 TARGET_INIT_VENDOR_LIB := libinit_msm
 TARGET_LIBINIT_DEFINES_FILE := device/xiaomi/armani/init/init_armani.c
 
+#Include 
+# Include path
+TARGET_SPECIFIC_HEADER_PATH += device/xiaomi/armani/include
+
 # Lights
 TARGET_PROVIDES_LIBLIGHT := true
 
@@ -126,6 +130,7 @@ BOARD_SEPOLICY_DIRS += device/xiaomi/armani/sepolicy
 
 #RIL
 BOARD_PROVIDES_LIBRIL := true
+BOARD_HAS_RIL_LEGACY_PAP := true
 
 # Time services
 BOARD_USES_QC_TIME_SERVICES := true
@@ -146,6 +151,7 @@ BOARD_HOSTAPD_PRIVATE_LIB := lib_driver_cmd_$(BOARD_WLAN_DEVICE)
 TARGET_USES_WCNSS_CTRL := true
 WIFI_DRIVER_FW_PATH_STA := "sta"
 WIFI_DRIVER_FW_PATH_AP := "ap"
+TARGET_USES_QCOM_WCNSS_QMI := true
 
 # inherit from the proprietary version
 -include vendor/xiaomi/armani/BoardConfigVendor.mk
