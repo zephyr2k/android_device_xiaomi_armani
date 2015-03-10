@@ -129,6 +129,7 @@ include device/qcom/sepolicy/sepolicy.mk
 BOARD_SEPOLICY_DIRS += device/xiaomi/armani/sepolicy
 
 #RIL
+TARGET_RIL_VARIANT = ril-caf
 BOARD_PROVIDES_LIBRIL := true
 BOARD_HAS_RIL_LEGACY_PAP := true
 
