@@ -2008,7 +2008,9 @@ sendResponseRaw (const void *data, size_t dataSize, RIL_SOCKET_ID socket_id) {
     }
 #endif
 #endif
+RLOGD("Custom : RIL.cpp . Came Here on 2011");
     if (fd < 0) {
+	 RLOGE("Custom : RIL.cpp . fd < 0");
         return -1;
     }
 
