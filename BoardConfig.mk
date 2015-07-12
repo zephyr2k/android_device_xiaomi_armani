@@ -134,7 +134,7 @@ include device/qcom/sepolicy/sepolicy.mk
 BOARD_SEPOLICY_DIRS += device/xiaomi/armani/sepolicy
 
 # Time services
-BOARD_USES_QC_TIME_SERVICES := true
+#BOARD_USES_QC_TIME_SERVICES := true
 
 # Vold
 BOARD_VOLD_EMMC_SHARES_DEV_MAJOR := true
